@@ -70,15 +70,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         switch (v.getId()) {
             case R.id.login:
-               // Toast.makeText(LoginActivity.this, "Login", Toast.LENGTH_SHORT).show();
                 String username = inputUsername.getEditText().getText().toString();
                 String password = inputPassword.getEditText().getText().toString();
-                // Check for empty data in the form
                 if (username.trim().length() > 0 && password.trim().length() > 0) {
-                    // login user
                     checkLogin(username, password);
                 } else {
-                    // Prompt user to enter credentials
                     Toast.makeText(getApplicationContext(), "Please enter the credentials!", Toast.LENGTH_LONG).show();
                 }
                 break;
@@ -152,7 +148,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         }) {
             @Override
             protected Map<String, String> getParams() {
-                // Posting parameters to login url
                 Map<String, String> params = new HashMap<String, String>();
                 params.put("tag", "login");
                 params.put("user_name", username);
