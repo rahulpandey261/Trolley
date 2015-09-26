@@ -1,30 +1,26 @@
 package com.trolley.trolley.Activities;
 
-import android.app.Dialog;
 import android.app.ProgressDialog;
-import android.support.design.widget.TextInputLayout;
-import android.support.v4.app.DialogFragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentTransaction;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import com.android.volley.AuthFailureError;
 import com.android.volley.Request;
 import com.android.volley.Response;
 import com.android.volley.VolleyError;
 import com.android.volley.toolbox.StringRequest;
 import com.trolley.trolley.Application.TrolleyApp;
 import com.trolley.trolley.Constants.TrolleyConstants;
-import com.trolley.trolley.Fragments.TrolleyDialogs;
 import com.trolley.trolley.R;
+import com.trolley.trolley.apis.ApiUtils;
+import com.trolley.trolley.dialogs.SignUpDialog;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -32,13 +28,12 @@ import org.json.JSONObject;
 import java.util.HashMap;
 import java.util.Map;
 
-public class LoginActivity extends AppCompatActivity implements View.OnClickListener, TrolleyDialogs.TrolleyDialogsListener {
+public class LoginActivity extends AppCompatActivity implements View.OnClickListener, SignUpDialog.InfoUpdater, ApiUtils.Constants {
     Button mSignUp, mSkip;
     ImageButton mSignIn;
     boolean islogin = false;
     private Toolbar toolbar;
-    private TextInputLayout inputUsername;
-    private TextInputLayout inputPassword;
+    private EditText inputUsername, inputPassword;
     private ProgressDialog pDialog;
 
     @Override
@@ -54,9 +49,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         mSignUp = (Button) findViewById(R.id.sign_up);
         mSkip = (Button) findViewById(R.id.skip);
 
-        inputUsername = (TextInputLayout) findViewById(R.id.usernameWrapper);
-        inputPassword = (TextInputLayout) findViewById(R.id.passwordWrapper);
-        // Progress dialog
+        inputUsername = (EditText) findViewById(R.id.username);
+        inputPassword = (EditText) findViewById(R.id.password);
+
         pDialog = new ProgressDialog(this);
         pDialog.setCancelable(false);
 
@@ -70,8 +65,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
         switch (v.getId()) {
             case R.id.login:
-                String username = inputUsername.getEditText().getText().toString();
-                String password = inputPassword.getEditText().getText().toString();
+                String username = inputUsername.getText().toString();
+                String password = inputPassword.getText().toString();
                 if (username.trim().length() > 0 && password.trim().length() > 0) {
                     checkLogin(username, password);
                 } else {
@@ -79,11 +74,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                 }
                 break;
             case R.id.sign_up:
-                Toast.makeText(LoginActivity.this, "sign up", Toast.LENGTH_SHORT).show();
                 showSignUpDialog();
                 break;
             case R.id.skip:
-                Toast.makeText(LoginActivity.this, "Skip", Toast.LENGTH_SHORT).show();
                 break;
         }
 
@@ -91,17 +84,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
 
     private void showSignUpDialog() {
-        DialogFragment newFragment = new TrolleyDialogs();
-        newFragment.show(getSupportFragmentManager(), "login");
-
-    }
-
-    @Override
-    public void onDialogPositiveClick(DialogFragment dialog) {
-        Dialog dialogView = dialog.getDialog();
-        TextInputLayout textInputLayout = (TextInputLayout) dialogView.findViewById(R.id.usernameWrapper);
-        Toast.makeText(LoginActivity.this, textInputLayout.getEditText().getText().toString(), Toast.LENGTH_SHORT).show();
-        dialog.dismiss();
+        DialogFragment registerDialog = new SignUpDialog();
+        registerDialog.show(getSupportFragmentManager(), SignUpDialog.TAG);
     }
 
     private void showDialog() {
@@ -124,14 +108,14 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             @Override
             public void onResponse(String response) {
                 hideDialog();
-                JSONObject jObj = null;
+                JSONObject jObj;
                 try {
                     jObj = new JSONObject(response);
-                    boolean error = jObj.getBoolean("error");
+                    boolean error = jObj.getBoolean(ERROR);
                     if (!error) {
-                        Toast.makeText(LoginActivity.this, jObj.getString("user_location"), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LoginActivity.this, jObj.getString(USER_LOCATION), Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(LoginActivity.this, jObj.getString("message"), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LoginActivity.this, jObj.getString(MESSAGE), Toast.LENGTH_SHORT).show();
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -141,7 +125,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         }, new Response.ErrorListener() {
             @Override
             public void onErrorResponse(VolleyError volleyError) {
-                Log.e("Rahul", "Login Error: " + volleyError.getMessage());
                 Toast.makeText(getApplicationContext(), volleyError.getMessage(), Toast.LENGTH_LONG).show();
                 hideDialog();
             }
@@ -149,12 +132,53 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             @Override
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<String, String>();
-                params.put("tag", "login");
-                params.put("user_name", username);
-                params.put("user_password", password);
+                params.put(TAG, LOGIN);
+                params.put(USER_NAME, username);
+                params.put(USER_PASSWORD, password);
                 return params;
             }
         };
         TrolleyApp.getInstance().addToReqQueue(strReq);
+    }
+
+    @Override
+    public void onSignUpRequested(final String userName, final String password, final String location) {
+
+        Response.Listener<String> responseListener = new Response.Listener<String>() {
+            @Override
+            public void onResponse(String response) {
+                try {
+                    JSONObject jsonObject = new JSONObject(response);
+                    boolean registered = jsonObject.getBoolean(REGISTER);
+                    if (!registered) {
+                        Toast.makeText(LoginActivity.this, jsonObject.getString(MESSAGE), Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(LoginActivity.this, R.string.registration_successful, Toast.LENGTH_SHORT).show();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        };
+
+        Response.ErrorListener errorListener = new Response.ErrorListener() {
+            @Override
+            public void onErrorResponse(VolleyError volleyError) {
+                Toast.makeText(LoginActivity.this, volleyError.getMessage(), Toast.LENGTH_LONG).show();
+            }
+        };
+
+        StringRequest request = new StringRequest(Request.Method.POST, TrolleyConstants.sWebUrl, responseListener, errorListener) {
+            @Override
+            protected Map<String, String> getParams() throws AuthFailureError {
+                Map<String, String> params = new HashMap<String, String>();
+                params.put(TAG, REGISTER);
+                params.put(USER_NAME, userName);
+                params.put(USER_PASSWORD, password);
+                params.put(USER_LOCATION, location);
+                return params;
+            }
+        };
+        TrolleyApp.getInstance().addToReqQueue(request);
     }
 }
