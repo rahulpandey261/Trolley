@@ -5,4 +5,6 @@
 
     <dimen name="basic_widget_spacing">8dp</dimen>
     <dimen name="small_widget_spacing">4dp</dimen>
+
+    <dimen name="product_size">108dp</dimen>
 </resources>

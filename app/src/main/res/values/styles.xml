@@ -11,6 +11,12 @@
         <item name="colorAccent">@color/accentColor</item>
     </style>
 
+    <style name="AppsTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/primaryColor</item>
+        <item name="colorPrimaryDark">@color/darkPrimaryColor</item>
+        <item name="colorAccent">@color/accentColor</item>
+    </style>
+
     <style name="DialogTheme" parent="Theme.AppCompat.Light.Dialog.MinWidth">
         <item name="android:windowAnimationStyle">@style/DialogAnimation</item>
     </style>
