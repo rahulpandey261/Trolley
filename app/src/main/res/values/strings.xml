@@ -13,6 +13,7 @@
     <string name="registration_successful">Successfully Registered !</string>
     <string name="missing_details_signup_signin">Please fill complete details !</string>
     <string name="products">Products</string>
+    <string name="welcome">Welcome !</string>
     <string-array name="location_list">
         <item>Ghaziabad</item>
         <item>Gurgaon</item>

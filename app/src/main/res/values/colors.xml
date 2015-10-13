@@ -6,6 +6,7 @@
     <color name="darkPrimaryColor">#388E3C</color>
     <color name="colorText">#FFFFFF</color>
     <color name="accentColor">#9E9E9E</color>
+    <color name="windowBackground">#EEEEEEEE</color>
 
 
     <!-- progress bar color -->
