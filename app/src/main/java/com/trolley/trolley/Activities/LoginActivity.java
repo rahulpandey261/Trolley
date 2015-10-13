@@ -1,14 +1,14 @@
 package com.trolley.trolley.Activities;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.Toolbar;
+import android.telephony.TelephonyManager;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.android.volley.AuthFailureError;
@@ -21,6 +21,8 @@ import com.trolley.trolley.Constants.TrolleyConstants;
 import com.trolley.trolley.R;
 import com.trolley.trolley.apis.ApiUtils;
 import com.trolley.trolley.dialogs.SignUpDialog;
+import com.trolley.trolley.utils.PreferenceUtils;
+import com.trolley.trolley.utils.UiUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -30,9 +32,7 @@ import java.util.Map;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener, SignUpDialog.InfoUpdater, ApiUtils.Constants {
     Button mSignUp, mSkip;
-    ImageButton mSignIn;
-    boolean islogin = false;
-    private Toolbar toolbar;
+    View mSignIn;
     private EditText inputUsername, inputPassword;
     private ProgressDialog pDialog;
 
@@ -40,12 +40,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-        toolbar = (Toolbar) findViewById(R.id.app_bar);
-        //toolbar.setLogo(android.R.drawable.ic_menu_close_clear_cancel);
-        toolbar.setTitle("Login");
-        setSupportActionBar(toolbar);
 
-        mSignIn = (ImageButton) findViewById(R.id.login);
+        mSignIn = findViewById(R.id.login);
         mSignUp = (Button) findViewById(R.id.sign_up);
         mSkip = (Button) findViewById(R.id.skip);
 
@@ -58,6 +54,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         mSkip.setOnClickListener(this);
         mSignUp.setOnClickListener(this);
         mSignIn.setOnClickListener(this);
+
+        inputUsername.setText(getPhoneNumber());
     }
 
     @Override
@@ -82,7 +80,6 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
     }
 
-
     private void showSignUpDialog() {
         DialogFragment registerDialog = new SignUpDialog();
         registerDialog.show(getSupportFragmentManager(), SignUpDialog.TAG);
@@ -100,7 +97,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
 
 
     //login json request
-    private void checkLogin(final String username, final String password) {
+    private void checkLogin(final String userName, final String password) {
         String tag_string_req = "req_login";
         pDialog.setMessage("Logging in ...");
         showDialog();
@@ -113,7 +110,9 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                     jObj = new JSONObject(response);
                     boolean error = jObj.getBoolean(ERROR);
                     if (!error) {
-                        Toast.makeText(LoginActivity.this, jObj.getString(USER_LOCATION), Toast.LENGTH_SHORT).show();
+                        Toast.makeText(LoginActivity.this, R.string.welcome, Toast.LENGTH_SHORT).show();
+                        PreferenceUtils.updateProfile(LoginActivity.this, userName, password);
+                        UiUtils.launchProducts(LoginActivity.this);
                     } else {
                         Toast.makeText(LoginActivity.this, jObj.getString(MESSAGE), Toast.LENGTH_SHORT).show();
                     }
@@ -133,7 +132,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             protected Map<String, String> getParams() {
                 Map<String, String> params = new HashMap<String, String>();
                 params.put(TAG, LOGIN);
-                params.put(USER_NAME, username);
+                params.put(USER_NAME, userName);
                 params.put(USER_PASSWORD, password);
                 return params;
             }
@@ -154,6 +153,8 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
                         Toast.makeText(LoginActivity.this, jsonObject.getString(MESSAGE), Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(LoginActivity.this, R.string.registration_successful, Toast.LENGTH_SHORT).show();
+                        PreferenceUtils.updateProfile(LoginActivity.this, userName, password);
+                        UiUtils.launchProducts(LoginActivity.this);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -180,5 +181,11 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             }
         };
         TrolleyApp.getInstance().addToReqQueue(request);
+    }
+
+    String getPhoneNumber() {
+        TelephonyManager tm = (TelephonyManager) getSystemService(Context.TELEPHONY_SERVICE);
+        String number = tm.getLine1Number();
+        return number != null ? number : "";
     }
 }

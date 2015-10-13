@@ -1,11 +1,7 @@
 package com.trolley.trolley.Activities;
 
-import android.app.ProgressDialog;
-import android.content.Intent;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.Menu;
-import android.view.MenuItem;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.Toast;
@@ -18,6 +14,8 @@ import com.android.volley.toolbox.StringRequest;
 import com.trolley.trolley.Application.TrolleyApp;
 import com.trolley.trolley.Constants.TrolleyConstants;
 import com.trolley.trolley.R;
+import com.trolley.trolley.utils.PreferenceUtils;
+import com.trolley.trolley.utils.UiUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -44,10 +42,11 @@ public class SplashActivity extends AppCompatActivity {
                     jsonObject = new JSONObject(s);
                     mProgressBar.setVisibility(View.GONE);
                     if (jsonObject.getBoolean("success")) {
-                        Toast.makeText(SplashActivity.this, "You are In ...", Toast.LENGTH_SHORT).show();
-                        Intent intent = new Intent(SplashActivity.this, LoginActivity.class);
-                        startActivity(intent);
-                        // Lunch Next Activity
+                        if(PreferenceUtils.isSignedIn(SplashActivity.this)) {
+                            UiUtils.launchProducts(SplashActivity.this);
+                        } else {
+                            UiUtils.launchRegistration(SplashActivity.this);
+                        }
                     } else {
                         Toast.makeText(SplashActivity.this, "Please Check Your Connection...", Toast.LENGTH_SHORT).show();
                     }
