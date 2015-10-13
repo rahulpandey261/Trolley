@@ -35,6 +35,7 @@ public class ProductsFragment extends Fragment {
 
     void initializeView(View view) {
         mListView = (ExpandableListView) view.findViewById(R.id.list);
+        mListView.setOnGroupExpandListener(mGroupExpandListener);
     }
 
     @Override
@@ -42,6 +43,19 @@ public class ProductsFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
         new ProductLoaderTask(getActivity()).execute();
     }
+
+    ExpandableListView.OnGroupExpandListener mGroupExpandListener = new ExpandableListView
+            .OnGroupExpandListener() {
+        int currentPosition = -1;
+
+        @Override
+        public void onGroupExpand(int groupPosition) {
+            if (groupPosition != currentPosition) {
+                mListView.collapseGroup(currentPosition);
+                currentPosition = groupPosition;
+            }
+        }
+    };
 
     class ProductLoaderTask extends AsyncTask<String, Integer, String> {
 
